@@ -19,5 +19,4 @@ jobs:
           profile: minimal
           toolchain: nightly
           components: rustfmt, clippy
-          
-      run: cargo +nightly fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
