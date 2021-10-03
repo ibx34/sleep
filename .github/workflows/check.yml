@@ -15,4 +15,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: rustfmt
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
