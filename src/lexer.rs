@@ -1,47 +1,64 @@
+use crate::tokens::Token;
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ErrorKind {
+  UnkownEoF,
+  UnknownCharacter(char),
+  FailedToFindCharacter,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Error {
+  pub error_kind: ErrorKind,
+  pub string_pos: usize,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Atom {
+  Token(Token),
+  Error(Error),
+}
+
 pub struct Lexer<'a> {
-    pub source: &'a [char],
-    pub index: usize,
+  pub source: &'a [char],
+  pub current: char,
+  pub idx: usize,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn build(source: &'a [char]) -> Lexer {
-        Lexer {
-            source,
-            index: 0
-        }
+  pub fn eof(&self, amount: Option<usize>) -> bool {
+    let amount = self.idx + amount.unwrap_or(0);
+
+    if amount <= self.source.len() {
+      return false;
     }
-    
-    pub fn check_eof(&self, index: Option<usize>) -> bool {
-        index.unwrap_or(self.index) > self.source.len()
+    true
+  }
+
+  pub fn advance(&mut self, amount: Option<usize>) -> bool {
+    let amount = amount.unwrap_or(1);
+
+    if !self.eof(Some(amount)) {
+      self.idx += amount;
+      return true;
     }
+    false
+  }
 
-    pub fn advance_by(&mut self, amount: usize) -> bool { 
-        let possible_next_index = self.index + amount;
-        
-        if self.check_eof(Some(possible_next_index)) {
-            return false;
-        }
+  pub fn current(&self) -> Option<&'a char> { self.source.get(self.idx) }
 
-        self.index = possible_next_index;
-        true
-    }
-
-    pub fn advance(&mut self) -> bool { 
-        let possible_next_index = self.index + 1;
-        
-        if self.check_eof(Some(possible_next_index)) {
-            return false;
-        }
-
-        self.index = possible_next_index;
-        true
+  pub fn current_checked(&self) -> Result<&'a char, Error> {
+    if self.idx > self.source.len() {
+      return Err(Error { error_kind: ErrorKind::UnkownEoF,
+                         string_pos: self.idx });
     }
 
-    pub fn peek(&self) -> Option<char> {
-        self.source.get(self.index + 1).copied()
+    let character = self.source.get(self.idx);
+    if let Some(character) = character {
+      Ok(character)
+    } else {
+      Err(Error { error_kind: ErrorKind::FailedToFindCharacter,
+                  string_pos: self.idx })
     }
-
-    pub fn current_char(&self) -> Option<char> {
-        self.source.get(self.index).copied()
-    }
-} 
+  }
+}
