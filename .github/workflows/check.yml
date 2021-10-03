@@ -13,6 +13,9 @@ jobs:
   rustfmt:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Install minimal nightly with clippy and rustfmt
         uses: actions-rs/toolchain@v1
         with:
@@ -21,4 +24,4 @@ jobs:
           components: rustfmt, clippy
 
       - name: Rust +nightly fmt
-        run: cargo +nightly fmt --all -- --check
+        run: cargo +nightly fmt -- --check
