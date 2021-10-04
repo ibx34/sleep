@@ -2,9 +2,11 @@ use crate::lexer::{Error, ErrorKind, Lexer};
 
 #[test]
 pub fn default() {
-  let mut lexer = Lexer { source: &['[', ']'],
-                          idx: 0,
-                          current: ' ' };
+  let mut lexer = Lexer {
+    source: &['[', ']'],
+    idx: 0,
+    current: ' ',
+  };
 
   assert_eq!(lexer.current(), Some(&'['));
   lexer.advance(None);
@@ -13,9 +15,11 @@ pub fn default() {
 
 #[test]
 pub fn current_checked() {
-  let mut lexer = Lexer { source: &['[', ']'],
-                          idx: 0,
-                          current: ' ' };
+  let mut lexer = Lexer {
+    source: &['[', ']'],
+    idx: 0,
+    current: ' ',
+  };
 
   assert_eq!(lexer.current(), Some(&'['));
   lexer.advance(None);
@@ -23,6 +27,19 @@ pub fn current_checked() {
 
   // Error should happen here
   lexer.advance(None);
-  assert_eq!(lexer.current_checked().unwrap_err(), Error { error_kind: ErrorKind::FailedToFindCharacter,
-                                                           string_pos: 2 })
+  assert_eq!(lexer.current_checked().unwrap_err(), Error {
+    error_kind: ErrorKind::FailedToFindCharacter,
+    string_pos: 2
+  })
+}
+
+#[test]
+pub fn eof() {
+  let lexer = Lexer {
+    source: &['[', ']'],
+    idx: 0,
+    current: ' ',
+  };
+
+  assert_eq!(lexer.eof(Some(2)), true)
 }

@@ -27,9 +27,9 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
   pub fn eof(&self, amount: Option<usize>) -> bool {
-    let amount = self.idx + amount.unwrap_or(0);
+    let idx = amount.unwrap_or(self.idx);
 
-    if amount <= self.source.len() {
+    if let Some(_) = self.source.get(idx) {
       return false;
     }
     true
@@ -49,16 +49,20 @@ impl<'a> Lexer<'a> {
 
   pub fn current_checked(&self) -> Result<&'a char, Error> {
     if self.idx > self.source.len() {
-      return Err(Error { error_kind: ErrorKind::UnkownEoF,
-                         string_pos: self.idx });
+      return Err(Error {
+        error_kind: ErrorKind::UnkownEoF,
+        string_pos: self.idx,
+      });
     }
 
     let character = self.source.get(self.idx);
     if let Some(character) = character {
       Ok(character)
     } else {
-      Err(Error { error_kind: ErrorKind::FailedToFindCharacter,
-                  string_pos: self.idx })
+      Err(Error {
+        error_kind: ErrorKind::FailedToFindCharacter,
+        string_pos: self.idx,
+      })
     }
   }
 }
