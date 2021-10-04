@@ -29,7 +29,7 @@ impl<'a> Lexer<'a> {
   pub fn eof(&self, amount: Option<usize>) -> bool {
     let idx = amount.unwrap_or(self.idx);
 
-    if let Some(_) = self.source.get(idx) {
+    if self.source.get(idx).is_some() {
       return false;
     }
     true
