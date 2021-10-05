@@ -1,4 +1,7 @@
-use crate::lexer::{Error, ErrorKind, Lexer};
+use crate::{
+  lexer::{Atom, Error, ErrorKind, Lexer},
+  tokens::{TPos, ToT, Token},
+};
 
 #[test]
 pub fn default() {
@@ -6,6 +9,7 @@ pub fn default() {
     source: &['[', ']'],
     idx: 0,
     current: ' ',
+    line: 0,
   };
 
   assert_eq!(lexer.current(), Some(&'['));
@@ -18,6 +22,7 @@ pub fn current_checked() {
   let mut lexer = Lexer {
     source: &['[', ']'],
     idx: 0,
+    line: 0,
     current: ' ',
   };
 
@@ -39,7 +44,26 @@ pub fn eof() {
     source: &['[', ']'],
     idx: 0,
     current: ' ',
+    line: 0,
   };
 
   assert_eq!(lexer.eof(Some(2)), true)
+}
+
+#[test]
+pub fn lexer_lex() {
+  let mut lexer = Lexer {
+    source: &['#', 's', 'd', 'b', 's', 'b', 's', '\n', '('],
+    idx: 0,
+    line: 0,
+    current: ' ',
+  };
+
+  assert_eq!(
+    lexer.lex(),
+    Some(Atom::Token(Token {
+      ty: ToT::LeftParen,
+      position: TPos { index: 8, line_: 1 }
+    }))
+  )
 }

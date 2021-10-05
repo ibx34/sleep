@@ -1,4 +1,4 @@
-use crate::tokens::Token;
+use crate::tokens::{TPos, ToT, Token};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrorKind {
@@ -23,9 +23,58 @@ pub struct Lexer<'a> {
   pub source: &'a [char],
   pub current: char,
   pub idx: usize,
+  pub line: usize,
 }
 
 impl<'a> Lexer<'a> {
+  pub fn lex(&mut self) -> Option<Atom> {
+    while self.current() == Some(&'#') {
+      let idx_before = self.idx;
+      self.advance(None);
+
+      if self.eof(None) {
+        return None;
+      }
+
+      self.skip_comments();
+      if self.idx == idx_before {
+        break;
+      }
+      self.advance(None);
+    }
+
+    let cc = match self.current() {
+      Some(char) => char,
+      None => return None,
+    };
+
+    Some(match cc {
+      '#' => Atom::Token(Token {
+        ty: ToT::Hashtag,
+        position: TPos { index: self.idx, line_: self.line },
+      }),
+      '(' => Atom::Token(Token {
+        ty: ToT::LeftParen,
+        position: TPos { index: self.idx, line_: self.line },
+      }),
+      _ => Atom::Error(Error {
+        error_kind: ErrorKind::UnknownCharacter(*cc),
+        string_pos: self.idx,
+      }),
+    })
+  }
+
+  pub fn skip_comments(&mut self) {
+    while !self.eof(None) {
+      if self.current() == Some(&'\n') {
+        self.line += 1;
+        break;
+      }
+
+      self.advance(None);
+    }
+  }
+
   pub fn eof(&self, amount: Option<usize>) -> bool {
     let idx = amount.unwrap_or(self.idx);
 
