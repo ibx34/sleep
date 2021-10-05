@@ -20,7 +20,7 @@ pub enum Atom {
 }
 
 pub struct Lexer<'a> {
-  pub source: &'a [char],
+  pub source: &'a Vec<char>,
   pub current: char,
   pub idx: usize,
   pub line: usize,
@@ -134,7 +134,7 @@ impl<'a> Lexer<'a> {
 
   pub fn current_unchecked(&self) -> char { self.source[self.idx] }
 
-  pub fn current_checked(&self) -> Result<&'a char, Error> {
+  pub fn current_checked(&self) -> Result<char, Error> {
     if self.idx > self.source.len() {
       return Err(Error {
         error_kind: ErrorKind::UnkownEoF,
@@ -144,7 +144,7 @@ impl<'a> Lexer<'a> {
 
     let character = self.source.get(self.idx);
     if let Some(character) = character {
-      Ok(character)
+      Ok(*character)
     } else {
       Err(Error {
         error_kind: ErrorKind::FailedToFindCharacter,

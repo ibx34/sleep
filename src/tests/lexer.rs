@@ -6,7 +6,7 @@ use crate::{
 #[test]
 pub fn default() {
   let mut lexer = Lexer {
-    source: &['[', ']'],
+    source: &vec!['[', ']'],
     idx: 0,
     current: ' ',
     line: 1,
@@ -20,7 +20,7 @@ pub fn default() {
 #[test]
 pub fn current_checked() {
   let mut lexer = Lexer {
-    source: &['[', ']'],
+    source: &vec!['[', ']'],
     idx: 0,
     line: 1,
     current: ' ',
@@ -41,7 +41,7 @@ pub fn current_checked() {
 #[test]
 pub fn eof() {
   let lexer = Lexer {
-    source: &['[', ']'],
+    source: &vec!['[', ']'],
     idx: 0,
     current: ' ',
     line: 1,
@@ -53,7 +53,7 @@ pub fn eof() {
 #[test]
 pub fn lexer_lex() {
   let mut lexer = Lexer {
-    source: &['#', 's', 'd', 'b', 's', 'b', 's', '\n', '('],
+    source: &vec!['#', 's', 'd', 'b', 's', 'b', 's', '\n', '('],
     idx: 0,
     line: 1,
     current: ' ',
@@ -71,7 +71,7 @@ pub fn lexer_lex() {
 #[test]
 pub fn lexer_keyword() {
   let mut lexer = Lexer {
-    source: &['p', 'r', 'i', 'n', 't', '\n'],
+    source: &vec!['p', 'r', 'i', 'n', 't', '\n'],
     idx: 0,
     line: 1,
     current: ' ',
