@@ -24,10 +24,12 @@ pub struct Lexer<'a> {
   pub current: char,
   pub idx: usize,
   pub line: usize,
+  pub indent: usize,
 }
 
 impl<'a> Lexer<'a> {
   pub fn lex(&mut self) -> Option<Atom> {
+    self.whitespace();
     while self.current() == Some(&'#') {
       let idx_before = self.idx;
       if self.eof(None) {
@@ -38,7 +40,10 @@ impl<'a> Lexer<'a> {
       if self.idx == idx_before {
         break;
       }
+      self.whitespace();
     }
+
+    self.whitespace();
 
     let current_idx = self.idx;
     let cc = match self.current() {
@@ -47,9 +52,37 @@ impl<'a> Lexer<'a> {
     };
 
     Some(match cc {
-      '(' => Atom::Token(Token {
-        ty: ToT::LeftParen,
-        position: TPos { index: self.idx, line_: self.line },
+      ':' => {
+        let atom = Atom::Token(Token {
+          ty: ToT::Colon,
+          position: TPos {
+            index: self.idx,
+            line: self.line,
+            indent: self.indent,
+          },
+        });
+
+        if self.peek() == Some(&'\n') {
+          while !self.eof(None) {
+            if self.current() != Some(&' ') {
+              self.advance(None);
+              continue;
+            }
+            self.indent += 1;
+            self.line += 1;
+            break;
+          }
+        }
+
+        atom
+      }
+      '(' | ')' => Atom::Token(Token {
+        ty: cc.into(),
+        position: TPos {
+          index: self.idx,
+          line: self.line,
+          indent: self.indent,
+        },
       }),
       _ => {
         if cc.is_alphabetic() || cc.is_alphanumeric() {
@@ -65,7 +98,11 @@ impl<'a> Lexer<'a> {
             let actual_keyword = keyword.iter().collect::<String>();
             Atom::Token(Token {
               ty: actual_keyword.into(),
-              position: TPos { index: self.idx, line_: self.line },
+              position: TPos {
+                index: self.idx,
+                line: self.line,
+                indent: self.indent,
+              },
             })
           } else {
             Atom::Error(Error {
@@ -90,7 +127,9 @@ impl<'a> Lexer<'a> {
         None => return,
       };
 
-      if character == &' ' {
+      if character == &'\n' {
+        self.line += 1;
+      } else if character != &' ' {
         return;
       }
 
@@ -100,8 +139,14 @@ impl<'a> Lexer<'a> {
 
   pub fn skip_comments(&mut self) {
     while !self.eof(None) {
-      if self.current() == Some(&'\n') {
+      let character = match self.current() {
+        Some(c) => c,
+        None => return,
+      };
+
+      if character == &'\n' {
         self.line += 1;
+        //self.advance(None);
         break;
       }
 
@@ -129,6 +174,8 @@ impl<'a> Lexer<'a> {
     }
     false
   }
+
+  pub fn peek(&self) -> Option<&'a char> { self.source.get(self.idx + 1) }
 
   pub fn current(&self) -> Option<&'a char> { self.source.get(self.idx) }
 
