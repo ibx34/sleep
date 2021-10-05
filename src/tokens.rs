@@ -12,6 +12,8 @@ pub enum ToT {
   Def,
   Unkown,
   Colon,
+  SemiColon,
+  Comma,
 }
 
 impl From<String> for ToT {
@@ -30,6 +32,8 @@ impl From<&char> for ToT {
       ')' => Self::RightParen,
       '(' => Self::LeftParen,
       ':' => Self::Colon,
+      ';' => Self::SemiColon,
+      ',' => Self::Comma,
       _ => Self::Unkown,
     }
   }

@@ -1,19 +1,13 @@
-use std::{fs::File, io::Read};
-
 use crate::{
   lexer::{Atom, Lexer},
+  tests::utils::read_python_test,
   tokens::{TPos, ToT, Token},
 };
 
 #[test]
 fn py_print_test() {
-  let mut file = File::open("src/tests/python/print.py").unwrap();
-
-  let mut buffer = String::new();
-  file.read_to_string(&mut buffer).unwrap();
-
   let mut lexer = Lexer {
-    source: &buffer.chars().collect(),
+    source: &read_python_test("print").chars().collect(),
     current: ' ',
     idx: 0,
     line: 1,
@@ -41,13 +35,8 @@ fn py_print_test() {
 
 #[test]
 fn py_indent_test() {
-  let mut file = File::open("src/tests/python/indent.py").unwrap();
-
-  let mut buffer = String::new();
-  file.read_to_string(&mut buffer).unwrap();
-
   let mut lexer = Lexer {
-    source: &buffer.chars().collect(),
+    source: &read_python_test("indent").chars().collect(),
     current: ' ',
     idx: 0,
     line: 1,
@@ -62,18 +51,55 @@ fn py_indent_test() {
     }))
   );
 
-  // Process the function name
   lexer.lex();
-  // Skip function's ()
   lexer.advance(Some(2));
-  // Eat the colon and indent the file
-  lexer.lex();
 
   assert_eq!(
     lexer.lex(),
     Some(Atom::Token(Token {
       ty: ToT::Print,
       position: TPos { index: 20, line: 2, indent: 1 }
+    }))
+  );
+}
+
+#[test]
+fn py_indent_test_2() {
+  let mut lexer = Lexer {
+    source: &read_python_test("indent_2").chars().collect(),
+    current: ' ',
+    idx: 0,
+    line: 1,
+    indent: 0,
+  };
+
+  assert_eq!(
+    lexer.lex(),
+    Some(Atom::Token(Token {
+      ty: ToT::Def,
+      position: TPos { index: 3, line: 1, indent: 0 }
+    }))
+  );
+
+  lexer.lex();
+  lexer.advance(Some(2));
+
+  assert_eq!(
+    lexer.lex(),
+    Some(Atom::Token(Token {
+      ty: ToT::Def,
+      position: TPos { index: 18, line: 2, indent: 1 }
+    }))
+  );
+
+  lexer.lex();
+  lexer.advance(Some(2));
+
+  assert_eq!(
+    lexer.lex(),
+    Some(Atom::Token(Token {
+      ty: ToT::Print,
+      position: TPos { index: 39, line: 3, indent: 2 }
     }))
   );
 }

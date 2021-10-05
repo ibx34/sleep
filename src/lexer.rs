@@ -40,7 +40,20 @@ impl<'a> Lexer<'a> {
       if self.idx == idx_before {
         break;
       }
-      self.whitespace();
+    }
+
+    if self.peek(None) == Some(&'\n') {
+      if self.peek(Some(2)) == Some(&' ') {
+        self.advance(Some(3));
+
+        if self.current() != Some(&' ') {
+          self.advance(None);
+        }
+        self.indent += 1;
+      }
+
+      self.line += 1;
+      self.advance(None);
     }
 
     self.whitespace();
@@ -52,30 +65,14 @@ impl<'a> Lexer<'a> {
     };
 
     Some(match cc {
-      ':' => {
-        let atom = Atom::Token(Token {
-          ty: ToT::Colon,
-          position: TPos {
-            index: self.idx,
-            line: self.line,
-            indent: self.indent,
-          },
-        });
-
-        if self.peek() == Some(&'\n') {
-          while !self.eof(None) {
-            if self.current() != Some(&' ') {
-              self.advance(None);
-              continue;
-            }
-            self.indent += 1;
-            self.line += 1;
-            break;
-          }
-        }
-
-        atom
-      }
+      ':' => Atom::Token(Token {
+        ty: ToT::Colon,
+        position: TPos {
+          index: self.idx,
+          line: self.line,
+          indent: self.indent,
+        },
+      }),
       '(' | ')' => Atom::Token(Token {
         ty: cc.into(),
         position: TPos {
@@ -175,7 +172,7 @@ impl<'a> Lexer<'a> {
     false
   }
 
-  pub fn peek(&self) -> Option<&'a char> { self.source.get(self.idx + 1) }
+  pub fn peek(&self, amount: Option<usize>) -> Option<&'a char> { self.source.get(self.idx + amount.unwrap_or(1)) }
 
   pub fn current(&self) -> Option<&'a char> { self.source.get(self.idx) }
 

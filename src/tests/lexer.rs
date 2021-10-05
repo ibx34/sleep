@@ -63,6 +63,8 @@ pub fn lexer_lex() {
     indent: 0,
   };
 
+  lexer.lex();
+
   assert_eq!(
     lexer.lex(),
     Some(Atom::Token(Token {
