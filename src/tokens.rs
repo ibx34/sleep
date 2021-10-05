@@ -2,14 +2,17 @@
 pub enum ToT {
   Hashtag,
   LeftParen,
+  RightParen,
   Ident,
+  /// Keyword: Print: print
+  /// print(<value>)
+  Print,
 }
 
-impl From<char> for ToT {
-  fn from(c: char) -> Self {
-    match c {
-      '#' => Self::Hashtag,
-      '(' => Self::LeftParen,
+impl From<String> for ToT {
+  fn from(c: String) -> Self {
+    match c.as_str() {
+      "print" => Self::Print,
       _ => Self::Ident,
     }
   }

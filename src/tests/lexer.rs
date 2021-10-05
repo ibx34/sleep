@@ -9,7 +9,7 @@ pub fn default() {
     source: &['[', ']'],
     idx: 0,
     current: ' ',
-    line: 0,
+    line: 1,
   };
 
   assert_eq!(lexer.current(), Some(&'['));
@@ -22,7 +22,7 @@ pub fn current_checked() {
   let mut lexer = Lexer {
     source: &['[', ']'],
     idx: 0,
-    line: 0,
+    line: 1,
     current: ' ',
   };
 
@@ -44,7 +44,7 @@ pub fn eof() {
     source: &['[', ']'],
     idx: 0,
     current: ' ',
-    line: 0,
+    line: 1,
   };
 
   assert_eq!(lexer.eof(Some(2)), true)
@@ -55,7 +55,7 @@ pub fn lexer_lex() {
   let mut lexer = Lexer {
     source: &['#', 's', 'd', 'b', 's', 'b', 's', '\n', '('],
     idx: 0,
-    line: 0,
+    line: 1,
     current: ' ',
   };
 
@@ -63,7 +63,25 @@ pub fn lexer_lex() {
     lexer.lex(),
     Some(Atom::Token(Token {
       ty: ToT::LeftParen,
-      position: TPos { index: 8, line_: 1 }
+      position: TPos { index: 8, line_: 2 }
+    }))
+  )
+}
+
+#[test]
+pub fn lexer_keyword() {
+  let mut lexer = Lexer {
+    source: &['p', 'r', 'i', 'n', 't', '\n'],
+    idx: 0,
+    line: 1,
+    current: ' ',
+  };
+
+  assert_eq!(
+    lexer.lex(),
+    Some(Atom::Token(Token {
+      ty: ToT::Print,
+      position: TPos { index: 5, line_: 1 }
     }))
   )
 }
