@@ -11,24 +11,24 @@ fn py_print_test() {
     current: ' ',
     idx: 0,
     line: 1,
-    indent: 0,
+    results: vec![],
   };
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Print,
-      position: TPos { index: 5, line: 1, indent: 0 }
+      position: TPos { index: 5, line: 1 }
     }))
   );
 
   lexer.advance(Some(2));
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Print,
-      position: TPos { index: 35, line: 4, indent: 0 }
+      position: TPos { index: 35, line: 4 }
     }))
   );
 }
@@ -40,14 +40,14 @@ fn py_indent_test() {
     current: ' ',
     idx: 0,
     line: 1,
-    indent: 0,
+    results: vec![],
   };
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Def,
-      position: TPos { index: 3, line: 1, indent: 0 }
+      position: TPos { index: 3, line: 1 }
     }))
   );
 
@@ -55,10 +55,10 @@ fn py_indent_test() {
   lexer.advance(Some(2));
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Print,
-      position: TPos { index: 20, line: 2, indent: 1 }
+      position: TPos { index: 20, line: 2 }
     }))
   );
 }
@@ -70,14 +70,14 @@ fn py_indent_test_2() {
     current: ' ',
     idx: 0,
     line: 1,
-    indent: 0,
+    results: vec![],
   };
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Def,
-      position: TPos { index: 3, line: 1, indent: 0 }
+      position: TPos { index: 3, line: 1 }
     }))
   );
 
@@ -85,10 +85,10 @@ fn py_indent_test_2() {
   lexer.advance(Some(2));
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Def,
-      position: TPos { index: 18, line: 2, indent: 1 }
+      position: TPos { index: 18, line: 2 }
     }))
   );
 
@@ -96,10 +96,14 @@ fn py_indent_test_2() {
   lexer.advance(Some(2));
 
   assert_eq!(
-    lexer.lex(),
-    Some(Atom::Token(Token {
+    lexer.next(),
+    &Some(Atom::Token(Token {
       ty: ToT::Print,
-      position: TPos { index: 39, line: 3, indent: 2 }
+      position: TPos { index: 39, line: 3 }
     }))
   );
+
+  lexer.advance(Some(2));
+  println!("{:?}", lexer.lex());
+  println!("{:?}", lexer.lex());
 }

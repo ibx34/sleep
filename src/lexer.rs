@@ -3,12 +3,13 @@ use crate::tokens::{TPos, ToT, Token};
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrorKind {
   UnkownEoF,
+  EoF,
   UnknownCharacter(char),
   FailedToFindCharacter,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Error {
+pub struct r#Error {
   pub error_kind: ErrorKind,
   pub string_pos: usize,
 }
@@ -24,16 +25,16 @@ pub struct Lexer<'a> {
   pub current: char,
   pub idx: usize,
   pub line: usize,
-  pub indent: usize,
+  pub results: Vec<Option<Atom>>,
 }
 
 impl<'a> Lexer<'a> {
-  pub fn lex(&mut self) -> Option<Atom> {
+  pub fn lex(&mut self) {
     self.whitespace();
     while self.current() == Some(&'#') {
       let idx_before = self.idx;
       if self.eof(None) {
-        return None;
+        return;
       }
 
       self.skip_comments();
@@ -49,7 +50,10 @@ impl<'a> Lexer<'a> {
         if self.current() != Some(&' ') {
           self.advance(None);
         }
-        self.indent += 1;
+        self.results.push(Some(Atom::Token(Token {
+          ty: ToT::Indent,
+          position: TPos { index: self.idx, line: self.line },
+        })))
       }
 
       self.line += 1;
@@ -61,25 +65,17 @@ impl<'a> Lexer<'a> {
     let current_idx = self.idx;
     let cc = match self.current() {
       Some(char) => char,
-      None => return None,
+      None => return,
     };
 
-    Some(match cc {
+    let atom = Some(match cc {
       ':' => Atom::Token(Token {
         ty: ToT::Colon,
-        position: TPos {
-          index: self.idx,
-          line: self.line,
-          indent: self.indent,
-        },
+        position: TPos { index: self.idx, line: self.line },
       }),
       '(' | ')' => Atom::Token(Token {
         ty: cc.into(),
-        position: TPos {
-          index: self.idx,
-          line: self.line,
-          indent: self.indent,
-        },
+        position: TPos { index: self.idx, line: self.line },
       }),
       _ => {
         if cc.is_alphabetic() || cc.is_alphanumeric() {
@@ -95,11 +91,7 @@ impl<'a> Lexer<'a> {
             let actual_keyword = keyword.iter().collect::<String>();
             Atom::Token(Token {
               ty: actual_keyword.into(),
-              position: TPos {
-                index: self.idx,
-                line: self.line,
-                indent: self.indent,
-              },
+              position: TPos { index: self.idx, line: self.line },
             })
           } else {
             Atom::Error(Error {
@@ -114,7 +106,8 @@ impl<'a> Lexer<'a> {
           })
         }
       }
-    })
+    });
+    self.results.push(atom);
   }
 
   pub fn whitespace(&mut self) {
@@ -172,6 +165,14 @@ impl<'a> Lexer<'a> {
     false
   }
 
+  #[allow(clippy::should_implement_trait)]
+  pub fn next(&mut self) -> &Option<Atom> {
+    self.lex();
+    self.latest()
+  }
+
+  pub fn latest(&self) -> &Option<Atom> { self.results.last().unwrap_or(&None) }
+
   pub fn peek(&self, amount: Option<usize>) -> Option<&'a char> { self.source.get(self.idx + amount.unwrap_or(1)) }
 
   pub fn current(&self) -> Option<&'a char> { self.source.get(self.idx) }
@@ -181,7 +182,7 @@ impl<'a> Lexer<'a> {
   pub fn current_checked(&self) -> Result<char, Error> {
     if self.idx > self.source.len() {
       return Err(Error {
-        error_kind: ErrorKind::UnkownEoF,
+        error_kind: ErrorKind::EoF,
         string_pos: self.idx,
       });
     }

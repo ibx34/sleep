@@ -14,6 +14,8 @@ pub enum ToT {
   Colon,
   SemiColon,
   Comma,
+  Indent,
+  Dedent,
 }
 
 impl From<String> for ToT {
@@ -43,7 +45,6 @@ impl From<&char> for ToT {
 pub struct TPos {
   pub index: usize,
   pub line: usize,
-  pub indent: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
