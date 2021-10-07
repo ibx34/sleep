@@ -1,5 +1,5 @@
 use crate::{
-  lexer::{Atom, Error, ErrorKind, Lexer},
+  lexer::{Atom, Error, ErrorKind, Lexer, LineInfo},
   tokens::{TPos, ToT, Token},
 };
 
@@ -9,8 +9,12 @@ pub fn default() {
     source: &vec!['[', ']'],
     idx: 0,
     current: ' ',
-    line: 1,
     results: vec![],
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
   };
 
   assert_eq!(lexer.current(), Some(&'['));
@@ -23,9 +27,13 @@ pub fn current_checked() {
   let mut lexer = Lexer {
     source: &vec!['[', ']'],
     idx: 0,
-    line: 1,
     current: ' ',
     results: vec![],
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
   };
 
   assert_eq!(lexer.current(), Some(&'['));
@@ -46,8 +54,12 @@ pub fn eof() {
     source: &vec!['[', ']'],
     idx: 0,
     current: ' ',
-    line: 1,
     results: vec![],
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
   };
 
   assert_eq!(lexer.eof(Some(2)), true)
@@ -58,9 +70,13 @@ pub fn lexer_lex() {
   let mut lexer = Lexer {
     source: &vec!['#', 's', 'd', 'b', 's', 'b', 's', '\n', '('],
     idx: 0,
-    line: 1,
     current: ' ',
     results: vec![],
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
   };
 
   lexer.lex();
@@ -79,9 +95,13 @@ pub fn lexer_keyword() {
   let mut lexer = Lexer {
     source: &vec!['p', 'r', 'i', 'n', 't'],
     idx: 0,
-    line: 1,
     current: ' ',
     results: vec![],
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
   };
 
   assert_eq!(

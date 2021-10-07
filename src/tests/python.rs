@@ -1,5 +1,5 @@
 use crate::{
-  lexer::{Atom, Lexer},
+  lexer::{Atom, Lexer, LineInfo},
   tests::utils::read_python_test,
   tokens::{TPos, ToT, Token},
 };
@@ -10,7 +10,11 @@ fn py_print_test() {
     source: &read_python_test("print").chars().collect(),
     current: ' ',
     idx: 0,
-    line: 1,
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
     results: vec![],
   };
 
@@ -39,7 +43,11 @@ fn py_indent_test() {
     source: &read_python_test("indent").chars().collect(),
     current: ' ',
     idx: 0,
-    line: 1,
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
     results: vec![],
   };
 
@@ -69,37 +77,41 @@ fn py_indent_test_2() {
     source: &read_python_test("indent_2").chars().collect(),
     current: ' ',
     idx: 0,
-    line: 1,
     results: vec![],
+    line_info: LineInfo {
+      last_line: 1,
+      current_line: 1,
+      last_spaces: 0,
+    },
   };
 
   assert_eq!(
     lexer.next(),
     &Some(Atom::Token(Token {
       ty: ToT::Def,
-      position: TPos { index: 3, line: 1 }
+      position: TPos { index: 21, line: 2 }
     }))
   );
 
   lexer.lex();
-  lexer.advance(Some(2));
+  lexer.advance(Some(3));
 
   assert_eq!(
     lexer.next(),
     &Some(Atom::Token(Token {
       ty: ToT::Def,
-      position: TPos { index: 18, line: 2 }
+      position: TPos { index: 58, line: 4 }
     }))
   );
 
   lexer.lex();
-  lexer.advance(Some(2));
+  lexer.advance(Some(3));
 
   assert_eq!(
     lexer.next(),
     &Some(Atom::Token(Token {
       ty: ToT::Print,
-      position: TPos { index: 39, line: 3 }
+      position: TPos { index: 105, line: 6 }
     }))
   );
 

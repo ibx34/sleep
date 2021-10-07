@@ -20,130 +20,90 @@ pub enum Atom {
   Error(Error),
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub struct LineInfo {
+  pub last_line: usize,
+  pub current_line: usize,
+  pub last_spaces: usize,
+}
+
 pub struct Lexer<'a> {
   pub source: &'a Vec<char>,
   pub current: char,
   pub idx: usize,
-  pub line: usize,
   pub results: Vec<Option<Atom>>,
+  //pub last_spaces: usize
+  pub line_info: LineInfo,
 }
 
 impl<'a> Lexer<'a> {
   pub fn lex(&mut self) {
-    self.whitespace();
-    while self.current() == Some(&'#') {
-      let idx_before = self.idx;
-      if self.eof(None) {
-        return;
-      }
+    let spaces = self.determine_indent();
 
+    if spaces > self.line_info.last_spaces && self.line_info.last_line != self.line_info.current_line {
+      self.create_token(ToT::Indent);
+      self.line_info.last_spaces = spaces;
+      return;
+    } else if spaces < self.line_info.last_spaces && spaces != 0 && self.line_info.last_line != self.line_info.current_line {
+      self.create_token(ToT::Dedent);
+      self.line_info.last_spaces = spaces;
+      return;
+    }
+
+    if self.current() == Some(&'\n') {
+      self.line_info.last_line = self.line_info.current_line;
+      self.line_info.current_line += 1;
+    } else if self.current() == Some(&'#') {
       self.skip_comments();
-      if self.idx == idx_before {
-        break;
-      }
-    }
-
-    if self.peek(None) == Some(&'\n') {
-      if self.peek(Some(2)) == Some(&' ') {
-        self.advance(Some(3));
-
-        if self.current() != Some(&' ') {
-          self.advance(None);
-        }
-        self.results.push(Some(Atom::Token(Token {
-          ty: ToT::Indent,
-          position: TPos { index: self.idx, line: self.line },
-        })))
-      }
-
-      self.line += 1;
-      self.advance(None);
-    }
-
-    self.whitespace();
-
-    let current_idx = self.idx;
-    let cc = match self.current() {
-      Some(char) => char,
-      None => return,
-    };
-
-    let atom = Some(match cc {
-      ':' => Atom::Token(Token {
-        ty: ToT::Colon,
-        position: TPos { index: self.idx, line: self.line },
-      }),
-      '(' | ')' => Atom::Token(Token {
-        ty: cc.into(),
-        position: TPos { index: self.idx, line: self.line },
-      }),
-      _ => {
-        if cc.is_alphabetic() || cc.is_alphanumeric() {
-          while !self.eof(None) {
-            let character = self.current_unchecked();
-            if !character.is_alphabetic() || !character.is_alphanumeric() {
-              break;
-            }
-            self.advance(None);
-          }
-
-          if let Some(keyword) = self.source.get(current_idx..self.idx) {
-            let actual_keyword = keyword.iter().collect::<String>();
-            Atom::Token(Token {
-              ty: actual_keyword.into(),
-              position: TPos { index: self.idx, line: self.line },
-            })
-          } else {
-            Atom::Error(Error {
-              error_kind: ErrorKind::UnknownCharacter(*cc),
-              string_pos: self.idx,
-            })
-          }
-        } else {
-          Atom::Error(Error {
-            error_kind: ErrorKind::UnknownCharacter(*cc),
-            string_pos: self.idx,
-          })
-        }
-      }
-    });
-    self.results.push(atom);
-  }
-
-  pub fn whitespace(&mut self) {
-    while !self.eof(None) {
-      let character = match self.current() {
-        Some(c) => c,
-        None => return,
-      };
-
-      if character == &'\n' {
-        self.line += 1;
-      } else if character != &' ' {
-        return;
-      }
-
-      self.advance(None);
     }
   }
 
   pub fn skip_comments(&mut self) {
     while !self.eof(None) {
-      let character = match self.current() {
-        Some(c) => c,
-        None => return,
-      };
-
-      if character == &'\n' {
-        self.line += 1;
-        //self.advance(None);
+      if self.current() == Some(&'\n') {
         break;
       }
+      self.advance(None);
+    }
+  }
 
+  pub fn create_token(&mut self, ty: ToT) {
+    self.results.push(Some(Atom::Token(Token {
+      ty,
+      position: TPos {
+        index: self.idx,
+        line: self.line_info.current_line,
+      },
+    })));
+  }
+
+  pub fn create_token_returned(&mut self, ty: ToT) -> &Option<Atom> {
+    self.create_token(ty);
+    self.latest()
+  }
+
+  pub fn lex_all(&mut self) {
+    while !self.eof(None) {
+      self.lex();
+      self.advance(None);
+    }
+  }
+
+  pub fn determine_indent(&mut self) -> usize {
+    let mut spaces_encountered = 0;
+
+    while !self.eof(None) {
+      let cc = self.current();
+
+      if cc.is_none() || cc != Some(&' ') && cc != Some(&'\t') {
+        return spaces_encountered;
+      }
+
+      spaces_encountered += 1;
       self.advance(None);
     }
 
-    self.advance(None);
+    spaces_encountered
   }
 
   pub fn eof(&self, amount: Option<usize>) -> bool {
@@ -166,6 +126,7 @@ impl<'a> Lexer<'a> {
   }
 
   #[allow(clippy::should_implement_trait)]
+  #[must_use = "If you would just like to lex, without getting the latest token, just run `.lex()`."]
   pub fn next(&mut self) -> &Option<Atom> {
     self.lex();
     self.latest()
