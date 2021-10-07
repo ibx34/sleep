@@ -14,7 +14,9 @@ pub enum ToT {
   Colon,
   SemiColon,
   Comma,
+  /// Token: Indent  
   Indent,
+  /// Token: Dedent  
   Dedent,
 }
 
