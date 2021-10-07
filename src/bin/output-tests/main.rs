@@ -5,7 +5,7 @@ use sleep::lexer::*;
 
 fn main() {
   let mut lexer = Lexer {
-    source: &read_python_file!("indent_comments").chars().collect(),
+    source: &read_python_file!("indent_2").chars().collect(),
     current: ' ',
     idx: 0,
     results: vec![],
@@ -18,5 +18,5 @@ fn main() {
 
   lexer.lex_all();
 
-  println!("{:#?}", lexer.results);
+  println!("{:?}", lexer.results);
 }

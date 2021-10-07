@@ -32,7 +32,6 @@ pub struct Lexer<'a> {
   pub current: char,
   pub idx: usize,
   pub results: Vec<Option<Atom>>,
-  //pub last_spaces: usize
   pub line_info: LineInfo,
 }
 
@@ -40,22 +39,54 @@ impl<'a> Lexer<'a> {
   pub fn lex(&mut self) {
     let spaces = self.determine_indent();
 
-    if spaces > self.line_info.last_spaces && self.line_info.last_line != self.line_info.current_line {
+    if spaces > self.line_info.last_spaces && spaces != 0 && self.line_info.last_line != self.line_info.current_line {
       self.create_token(ToT::Indent);
       self.line_info.last_spaces = spaces;
-      return;
     } else if spaces < self.line_info.last_spaces && spaces != 0 && self.line_info.last_line != self.line_info.current_line {
       self.create_token(ToT::Dedent);
       self.line_info.last_spaces = spaces;
-      return;
     }
 
-    if self.current() == Some(&'\n') {
-      self.line_info.last_line = self.line_info.current_line;
-      self.line_info.current_line += 1;
-    } else if self.current() == Some(&'#') {
-      self.skip_comments();
-    }
+    let current_idx = self.idx;
+    let c = match self.current() {
+      Some(c) => c,
+      None => return,
+    };
+
+    match c {
+      &'\n' => {
+        self.line_info.last_line = self.line_info.current_line;
+        self.line_info.current_line += 1;
+      }
+
+      &'#' => {
+        self.skip_comments();
+      }
+
+      &'(' | ')' => {
+        self.create_token(c.into());
+      }
+
+      &':' => self.create_token(ToT::Colon),
+
+      _ => {
+        if c.is_alphabetic() || c == &'_' {
+          while let Some(c) = self.peek(None) {
+            if !c.is_ascii_alphabetic() && c != &'_' {
+              break;
+            }
+            self.advance(None);
+          }
+
+          if let Some(keyword) = self.source.get(current_idx..self.idx + 1) {
+            let actual_keyword = keyword.iter().collect::<String>();
+            self.create_token(actual_keyword.into());
+          }
+        } else {
+          self.create_error(ErrorKind::UnknownCharacter(*c));
+        }
+      }
+    };
   }
 
   pub fn skip_comments(&mut self) {
@@ -77,9 +108,11 @@ impl<'a> Lexer<'a> {
     })));
   }
 
-  pub fn create_token_returned(&mut self, ty: ToT) -> &Option<Atom> {
-    self.create_token(ty);
-    self.latest()
+  pub fn create_error(&mut self, error: ErrorKind) {
+    self.results.push(Some(Atom::Error(Error {
+      error_kind: error,
+      string_pos: self.idx,
+    })));
   }
 
   pub fn lex_all(&mut self) {
