@@ -18,5 +18,5 @@ fn main() {
 
   lexer.lex_all();
 
-  println!("{:?}", lexer.results);
+  println!("{:#?}", lexer.results);
 }

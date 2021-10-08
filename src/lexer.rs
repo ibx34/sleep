@@ -43,7 +43,17 @@ impl<'a> Lexer<'a> {
       self.create_token(ToT::Indent);
       self.line_info.last_spaces = spaces;
     } else if spaces < self.line_info.last_spaces && spaces != 0 && self.line_info.last_line != self.line_info.current_line {
-      self.create_token(ToT::Dedent);
+      if let Some(last) = self.latest() {
+        match last {
+          Atom::Token(token) => {
+            if !token.position.line == self.line_info.current_line {
+              self.create_token(ToT::Dedent);
+            }
+          }
+          Atom::Error(_) => {}
+        }
+      }
+
       self.line_info.last_spaces = spaces;
     }
 
