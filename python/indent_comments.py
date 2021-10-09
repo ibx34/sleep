@@ -1,6 +1,11 @@
-# comment :tumbs_up:
-def owo():
+def first():
     print()
-
-    def pwp():
+    
+    def second():
         print()
+
+    def third():
+        print()
+    
+def fourth():
+    print()
